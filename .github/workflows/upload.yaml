@@ -70,7 +70,7 @@ jobs:
           for env in dev stg prd
           do
             mkdir $env
-            for name in `find . -type f -name '*.yaml'`; do sed -e "s/awesome-blog-dev/awesome-blog-$env/g" $name > ./$env/$name; done
+            for name in `find . -maxdepth 1 -type f -name '*.yaml'`; do sed -e "s/awesome-blog-dev/awesome-blog-$env/g" $name > ./$env/$name; done
           done
 
           aws s3 cp \
