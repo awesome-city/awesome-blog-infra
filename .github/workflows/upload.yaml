@@ -5,22 +5,33 @@ on:
       - 'main'
 
 jobs:
-  template-version:
+  prepare:
     runs-on: ubuntu-latest
     outputs:
       template-version: ${{ steps.TemplateVersion.outputs.template-version }}
+      s3-bucket: ${{ steps.upload.outputs.s3-bucket }}
+      s3-bucket-prefix: ${{ steps.upload.outputs.s3-bucket-prefix }}
     steps:
       - id: TemplateVersion
         name: TemplateVersion
         run: echo "template-version=v$(date +"%Y%m%d%H%M")" >> "$GITHUB_OUTPUT"
 
+      - id: ArtifactBucket
+        run: |
+          S3_BUCKET="awesome-cmn-cfn"
+          S3_BUCKET_PREFIX="${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/${{ steps.TemplateVersion.outputs.template-version }}"
+          {
+            echo "s3-bucket=${S3_BUCKET}"
+            echo "s3-bucket-prefix=${S3_BUCKET_PREFIX}"
+          } >> "$GITHUB_OUTPUT"
+
   lint:
     uses: ./.github/workflows/_lint.yaml
 
-  upload:
+  upload-cloudformation-template:
     needs:
       - lint
-      - template-version
+      - prepare
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -30,10 +41,6 @@ jobs:
         template-name:
           - 'awesome-blog-s3.template.yaml'
           - 'awesome-blog-stateful.template.yaml'
-    env:
-      AWS_REGION: ap-northeast-1
-      AWS_CFN_TEMPLATE_BUCKET: awesome-cmn-cfn
-      TEMPLATE_VERSION: ${{ needs.template-version.outputs.template-version}}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -47,36 +54,14 @@ jobs:
         name: Upload Cloudformation Template
         run: |
           OUTPUT_TEMPLATE_FILE="./cfn/out/${{ matrix.template-name }}"
-          S3_BUCKET="awesome-cmn-cfn"
-          S3_BUCKET_PREFIX="${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/${TEMPLATE_VERSION}"
 
           aws cloudformation package \
             --template-file ./cfn/template/${{ matrix.template-name }} \
-            --s3-bucket "${S3_BUCKET}" \
-            --s3-prefix "${S3_BUCKET_PREFIX}" \
+            --s3-bucket ${{ needs.prepare.outputs.s3-bucket }} \
+            --s3-prefix ${{ needs.prepare.outputs.s3-bucket-prefix }} \
             --output-template-file "${OUTPUT_TEMPLATE_FILE}"
 
-          {
-            echo "output-template-file=${OUTPUT_TEMPLATE_FILE}"
-            echo "s3-bucket=${S3_BUCKET}"
-            echo "s3-bucket-prefix=${S3_BUCKET_PREFIX}"
-          } >> "$GITHUB_OUTPUT"
-
-      - id: upload-api-spec
-        name: Upload OpenAPI Specification
-        if: ${{ matrix.template-name }} == 'awesome-blog-stateful.template.yaml'
-        working-directory: ./openapi
-        run: |
-          for env in dev stg prd
-          do
-            mkdir $env
-            for name in `find . -maxdepth 1 -type f -name '*.yaml'`; do sed -e "s/awesome-blog-dev/awesome-blog-$env/g" $name > ./$env/$name; done
-          done
-
-          aws s3 cp \
-            . \
-            s3://${{ steps.upload.outputs.s3-bucket }}/${{ steps.upload.outputs.s3-bucket-prefix }}/openapi/ \
-            --recursive
+          echo "output-template-file=${OUTPUT_TEMPLATE_FILE}" >> "$GITHUB_OUTPUT"
 
       - name: Validate
         run: |
@@ -87,12 +72,44 @@ jobs:
         run: |
           aws s3 cp \
             ${{ steps.upload.outputs.output-template-file }} \
-            s3://${{ steps.upload.outputs.s3-bucket }}/${{ steps.upload.outputs.s3-bucket-prefix }}/
+            s3://${{ needs.prepare.outputs.s3-bucket }}/${{ needs.prepare.outputs.s3-bucket-prefix }}/
+
+  upload-openapi-spec:
+    needs:
+      - lint
+      - prepare
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ap-northeast-1
+
+      - id: upload-api-spec
+        name: Upload OpenAPI Specification
+        working-directory: ./openapi
+        run: |
+          for env in dev stg prd
+          do
+            mkdir $env
+            for name in `find . -maxdepth 1 -type f -name '*.yaml'`; do sed -e "s/awesome-blog-dev/awesome-blog-$env/g" $name > ./$env/$name; done
+          done
+
+          aws s3 cp \
+            . \
+            s3://${{ needs.prepare.outputs.s3-bucket }}/${{ needs.prepare.outputs.s3-bucket-prefix }}/openapi/ \
+            --recursive
 
   tag:
     needs:
-      - upload
-      - template-version
+      - upload-cloudformation-template
+      - upload-openapi-spec
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -102,12 +119,6 @@ jobs:
 
       - id: Tag
         name: Push Tag
-        env:
-          TEMPLATE_VERSION: ${{ needs.template-version.outputs.template-version}}
         run: |
-          echo "TEMPLATE_VERSION=${TEMPLATE_VERSION}"
-          git tag "${TEMPLATE_VERSION}"
-          git push origin "${TEMPLATE_VERSION}"
-          echo "template-version=${TEMPLATE_VERSION}" >> "$GITHUB_OUTPUT"
-
-
+          git tag ${{ needs.prepare.outputs.template-version}}
+          git push origin ${{ needs.prepare.outputs.template-version}}
