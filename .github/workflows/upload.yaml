@@ -46,19 +46,21 @@ jobs:
       - id: upload
         name: Upload
         run: |
-          OUTPUT_TEMPLATE_FILE="./cfn/out/${{ inputs.template-name }}"
+          OUTPUT_TEMPLATE_FILE="./cfn/out/${{ matrix.template-name }}"
           S3_BUCKET="awesome-cmn-cfn"
           S3_BUCKET_PREFIX="awesome-blog-infra/${TEMPLATE_VERSION}/"
 
           aws cloudformation package \
-            --template-file ./cfn/template/${{ inputs.template-name }} \
+            --template-file ./cfn/template/${{ matrix.template-name }} \
             --s3-bucket "${S3_BUCKET}" \
             --s3-prefix "${S3_BUCKET_PREFIX}" \
             --output-template-file "${OUTPUT_TEMPLATE_FILE}"
 
-          echo "output-template-file=${OUTPUT_TEMPLATE_FILE}" >> "$GITHUB_OUTPUT"
-          echo "s3-bucket=${S3_BUCKET}" >> "$GITHUB_OUTPUT"
-          echo "s3-bucket-prefix=${S3_BUCKET_PREFIX}" >> "$GITHUB_OUTPUT"
+          {
+            echo "output-template-file=${OUTPUT_TEMPLATE_FILE}"
+            echo "s3-bucket=${S3_BUCKET}"
+            echo "s3-bucket-prefix=${S3_BUCKET_PREFIX}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Validate
         env:
