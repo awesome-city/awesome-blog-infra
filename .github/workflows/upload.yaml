@@ -14,7 +14,9 @@ jobs:
     steps:
       - id: TemplateVersion
         name: TemplateVersion
-        run: echo "template-version=v$(date +"%Y%m%d%H%M")" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "template-version=v$(date +"%Y%m%d%H%M")" >> "$GITHUB_OUTPUT"
+          echo "$GITHUB_OUTPUT"
 
       - id: ArtifactBucket
         run: |
@@ -24,6 +26,7 @@ jobs:
             echo "s3-bucket=${S3_BUCKET}"
             echo "s3-bucket-prefix=${S3_BUCKET_PREFIX}"
           } >> "$GITHUB_OUTPUT"
+          echo "$GITHUB_OUTPUT"
 
   lint:
     uses: ./.github/workflows/_lint.yaml
@@ -108,6 +111,7 @@ jobs:
 
   tag:
     needs:
+      - prepare
       - upload-cloudformation-template
       - upload-openapi-spec
     runs-on: ubuntu-latest
