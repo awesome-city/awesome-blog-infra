@@ -48,7 +48,7 @@ jobs:
         run: |
           OUTPUT_TEMPLATE_FILE="./cfn/out/${{ matrix.template-name }}"
           S3_BUCKET="awesome-cmn-cfn"
-          S3_BUCKET_PREFIX="awesome-blog-infra/${TEMPLATE_VERSION}"
+          S3_BUCKET_PREFIX="${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/${TEMPLATE_VERSION}"
 
           aws cloudformation package \
             --template-file ./cfn/template/${{ matrix.template-name }} \

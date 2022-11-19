@@ -70,7 +70,7 @@ jobs:
 
       - name: Download Template
         run: |
-          aws s3 cp s3://awesome-cmn-cfn/awesome-blog-infra/"${TEMPLATE_VERSION}"/ . --recursive
+          aws s3 cp s3://awesome-cmn-cfn/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/"${TEMPLATE_VERSION}"/ . --recursive
           ls -lha .
 
       - id: cloudformation-s3
