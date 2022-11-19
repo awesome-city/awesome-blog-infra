@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: S3 for awesome-blog
+
+Parameters:
+  ServiceName:
+    Type: String
+    Default: 'awesome-blog'
+  Environment:
+    Type: String
+    AllowedValues:
+      - dev
+      - stg
+      - prd
+  ShortRegionName:
+    Type: String
+
+Resources:
+  # ------------------------------------------------------------#
+  # S3 Bucket Policy
+  # ------------------------------------------------------------#
+#  S3BucketPolicy:
+#    Type: AWS::S3::BucketPolicy
+#    Properties:
+#      Bucket: !Ref S3BucketWeb
+#      PolicyDocument:
+#        Version: "2008-10-17"
+#        Statement:
+#          - Sid: "AllowCloudFrontServicePrincipal"
+#            Effect: "Allow"
+#            Principal:
+#              Service:
+#                - "cloudfront.amazonaws.com"
+#            Action:
+#              - "s3:GetObject"
+#            Resource:
+#              - !Sub ${S3BucketWeb.Arn}/*
+#            Condition:
+#              StringEquals:
+#                AWS:SourceArn: !Join [ '', [ !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/', !ImportValue AwesomeBlogCloudFrontId ] ]
+
+  # ------------------------------------------------------------#
+  # S3
+  # ------------------------------------------------------------#
+  S3BucketWeb:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join [ '-', [ !Ref ServiceName, !Ref ShortRegionName, !Ref Environment, 'web' ] ]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+
+  S3BucketLog:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join [ '-', [ !Ref ServiceName, !Ref ShortRegionName, !Ref Environment, 'log' ] ]
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      LifecycleConfiguration:
+        Rules:
+          - Id: LifeCycleRule
+        Status: Enabled
+        ExpirationInDays: 30
+
+  S3BucketLifecycle1Week:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join [ '-', [ !Ref ServiceName, !Ref ShortRegionName, !Ref Environment, 'lfcyl-1w' ] ]
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      LifecycleConfiguration:
+        Rules:
+          - Id: LifeCycleRule
+        Status: Enabled
+        ExpirationInDays: 7
+
+  S3BucketInternal:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join [ '-', [ !Ref ServiceName, !Ref ShortRegionName, !Ref Environment, 'int' ] ]
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+
+  S3BucketModule:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join [ '-', [ !Ref ServiceName, !Ref ShortRegionName, !Ref Environment, 'mdl' ] ]
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+
+Outputs:
+  S3BucketWebBucketName:
+    Value: !Ref S3BucketWeb
+  S3BucketWebBucketArn:
+    Value: !GetAtt S3BucketWeb.Arn
+  S3BucketWebDomainName:
+    Value: !GetAtt S3BucketWeb.DomainName
+  S3BucketLogBucketName:
+    Value: !Ref S3BucketLog
+  S3BucketLogBucketArn:
+    Value: !GetAtt S3BucketLog.Arn
+  S3BucketLogDomainName:
+    Value: !GetAtt S3BucketLog.DomainName
+  S3BucketLifecycle1WeekBucketName:
+    Value: !Ref S3BucketLifecycle1Week
+  S3BucketLifecycle1WeekBucketArn:
+    Value: !GetAtt S3BucketLifecycle1Week.Arn
+  S3BucketLifecycle1WeekDomainName:
+    Value: !GetAtt S3BucketLifecycle1Week.DomainName
+  S3BucketInternalBucketName:
+    Value: !Ref S3BucketInternal
+  S3BucketInternalBucketArn:
+    Value: !GetAtt S3BucketInternal.Arn
+  S3BucketInternalDomainName:
+    Value: !GetAtt S3BucketInternal.DomainName
+  S3BucketModuleBucketName:
+    Value: !Ref S3BucketModule
+  S3BucketModuleBucketArn:
+    Value: !GetAtt S3BucketModule.Arn
+  S3BucketModuleDomainName:
+    Value: !GetAtt S3BucketModule.DomainName

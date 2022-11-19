@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Stateful stack for awesome-blog
+
+Parameters:
+  ServiceName:
+    Type: String
+    Default: 'awesome-blog'
+  Environment:
+    Type: String
+    AllowedValues:
+      - dev
+      - stg
+      - prd
+  S3BucketWebDomainName:
+    Type: String
+
+Resources:
+
+  # ------------------------------------------------------------#
+  # CloudFront
+  # ------------------------------------------------------------#
+  CloudFront:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: awesome-blog-stateful-cloudfront.template.yaml
+      Parameters:
+        ServiceName: !Ref ServiceName
+        Environment: !Ref Environment
+        S3BucketWebDomainName: !Ref S3BucketWebDomainName

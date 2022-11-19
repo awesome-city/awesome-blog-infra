@@ -1,0 +1,92 @@
+name: Trigger test
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  template-version:
+    runs-on: ubuntu-latest
+    outputs:
+      template-version: ${{ steps.TemplateVersion.outputs.template-version }}
+    steps:
+      - id: TemplateVersion
+        name: TemplateVersion
+        run: echo "template-version=v$(date +"%Y%m%d%H%M")" >> "$GITHUB_OUTPUT"
+
+  lint:
+    uses: ./.github/workflows/_lint.yaml
+
+  upload:
+    needs:
+      - lint
+      - template-version
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        template-name:
+          - 'awesome-blog-s3.template.yaml'
+          - 'awesome-blog-stateful.template.yaml'
+    env:
+      AWS_REGION: ap-northeast-1
+      AWS_CFN_TEMPLATE_BUCKET: awesome-cmn-cfn
+      TEMPLATE_VERSION: ${{ needs.template-version.outputs.template-version}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: upload
+        name: Upload
+        run: |
+          OUTPUT_TEMPLATE_FILE="./cfn/out/${{ inputs.template-name }}"
+          S3_BUCKET="awesome-cmn-cfn"
+          S3_BUCKET_PREFIX="awesome-blog-infra/${TEMPLATE_VERSION}/"
+
+          aws cloudformation package \
+            --template-file ./cfn/template/${{ inputs.template-name }} \
+            --s3-bucket "${S3_BUCKET}" \
+            --s3-prefix "${S3_BUCKET_PREFIX}" \
+            --output-template-file "${OUTPUT_TEMPLATE_FILE}"
+
+          echo "output-template-file=${OUTPUT_TEMPLATE_FILE}" >> "$GITHUB_OUTPUT"
+          echo "s3-bucket=${S3_BUCKET}" >> "$GITHUB_OUTPUT"
+          echo "s3-bucket-prefix=${S3_BUCKET_PREFIX}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate
+        env:
+          S3_BUCKET: ${{ steps.upload.outputs.s3-bucket }}
+          S3_BUCKET_PREFIX: ${{ steps.upload.outputs.s3-bucket-prefix }}
+          OUTPUT_TEMPLATE_FILE: ${{ steps.upload.outputs.output-template-file }}
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://./${{ steps.upload.outputs.output-template-file }}
+  tag:
+    needs:
+      - upload
+      - template-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.OWNER_PAT }}
+
+      - id: Tag
+        name: Push Tag
+        env:
+          TEMPLATE_VERSION: ${{ needs.template-version.outputs.template-version}}
+        run: |
+          echo "TEMPLATE_VERSION=${TEMPLATE_VERSION}"
+          git tag "${TEMPLATE_VERSION}"
+          git push origin "${TEMPLATE_VERSION}"
+          echo "build-version=${TEMPLATE_VERSION}" >> "$GITHUB_OUTPUT"
+
+

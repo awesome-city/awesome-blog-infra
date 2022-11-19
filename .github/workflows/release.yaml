@@ -1,0 +1,84 @@
+name: Trigger on tag pushed
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types:
+      - prereleased
+      - released
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      build-version: ${{ steps.TagName.outputs.value }}
+      environment: ${{ steps.Environment.outputs.value }}
+    steps:
+      - id: TagName
+        run: echo "value=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - id: Environment
+        run: |
+          if [ ${{ github.event_name }} == 'push' ]; then
+            echo "value=dev" >> "GITHUB_OUTPUT"
+          elif [ ${{ github.event_name }} == 'release' ] && [ ${{ github.event.action }} == 'prereleased' ]; then
+            echo "value=stg" >> "GITHUB_OUTPUT"
+          elif [ ${{ github.event_name }} == 'release' ] && [ ${{ github.event.action }} == 'released' ]; then
+            echo "value=prd" >> "GITHUB_OUTPUT"
+          fi
+        shell: bash
+
+      - id: Echo
+        run: |
+          echo "template-version=${{ steps.TagName.outputs.value }}"
+          echo "environment=${{ steps.Environment.outputs.value }}"
+
+  deploy:
+    needs:
+      - prepare
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    strategy:
+      matrix:
+        aws-region: [ ap-northeast-1 ]
+    env:
+      ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
+      AWS_REGION: ${{ matrix.aws-region }}
+      TEMPLATE_VERSION: ${{ needs.prepare.outputs.template-version }}
+    steps:
+      echo:
+        runs-on: ubuntu-latest
+        steps:
+          - id: prepare
+            name: Prepare
+            run: |
+              list=(${AWS_REGION//-/ })
+              short="${list[0]:0:1}""${list[1]:0:1}""${list[2]:0:1}"
+              echo "short-region-name=${short}" >> "$GITHUB_OUTPUT"
+            shell: bash
+
+          - name: Echo
+            run: |
+              echo "ENVIRONMENT=${ENVIRONMENT}"
+              echo "AWS_REGION=${AWS_REGION}"
+              echo "TEMPLATE_VERSION=${TEMPLATE_VERSION}"
+              echo "SHORT_REGION_NAME=${{ steps.prepare.outputs.short-region-name }}"
+
+          - uses: aws-actions/configure-aws-credentials@v1
+            with:
+              role-to-assume: ${{ secrets.AWS_DEPLOYMENT_ROLE_ARN }}
+              aws-region: ${{ env.AWS_REGION }}
+
+          - name: Download Template
+            run: |
+              aws s3 cp s3://awesome-cmn-cfn/awesome-blog-infra/${TEMPLATE_VERSION}/ . --recursive
+              ls -lha .
+
+          - id: cloudformation-s3
+            name: AWS CloudFormation "Create s3 stack"
+            uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+            with:
+              name: 'awesome-blog-${{ steps.prepare.outputs.short-region-name }}-${ENVIRONMENT}-s3'
+

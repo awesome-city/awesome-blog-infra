@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: CloudFront for awesome-blog
+
+Parameters:
+  S3BucketWebDomainName:
+    Type: String
+
+Resources:
+  # ------------------------------------------------------------#
+  # OAC
+  # ------------------------------------------------------------#
+  OAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Description: Access Control
+        Name: OAC
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # ------------------------------------------------------------#
+  # Distribution
+  # ------------------------------------------------------------#
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          TargetOriginId: S3
+          ViewerProtocolPolicy: allow-all
+        Enabled: true
+        Origins:
+          - DomainName: !Ref S3BucketWebDomainName
+            Id: S3
+            OriginAccessControlId: !GetAtt OAC.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        PriceClass: PriceClass_200
+
+Outputs:
+  CloudFrontId:
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: AwesomeBlogCloudFrontId
