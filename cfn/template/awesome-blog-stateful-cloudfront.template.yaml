@@ -49,8 +49,12 @@ Resources:
               OriginAccessIdentity: ''
           - Id: ApiGatewayFront
             DomainName: !Sub '${FrontPageApiId}.execute-api.${AWS::Region}.amazonaws.com'
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
           - Id: ApiGatewayBackend
             DomainName: !Sub '${BackendApiId}.execute-api.${AWS::Region}.amazonaws.com'
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
         DefaultCacheBehavior:
           TargetOriginId: ApiGatewayFront
           AllowedMethods:
