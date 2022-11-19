@@ -75,6 +75,7 @@ jobs:
 
       - id: cloudformation-s3
         name: AWS CloudFormation "Create s3 stack"
+        continue-on-error: true
         uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
         with:
           name: 'awesome-blog-${{ env.ENVIRONMENT }}-s3'
@@ -88,6 +89,7 @@ jobs:
 
       - id: cloudformation-stateful
         name: AWS CloudFormation "Create stateful stack"
+        continue-on-error: true
         uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
         with:
           name: 'awesome-blog-${{ env.ENVIRONMENT }}-stateful'
@@ -100,3 +102,29 @@ jobs:
             OpenAPISpecS3BucketName=awesome-cmn-cfn,
             OpenAPISpecS3Key=awesome-blog-infra/${{ env.TEMPLATE_VERSION }}/openapi/backend-api.yaml
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
+
+  on-error:
+    needs:
+      - deploy
+    if: needs.deploy.outcome === 'failure'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    env:
+      ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
+      AWS_REGION: ${{ matrix.aws-region }}
+      TEMPLATE_VERSION: ${{ needs.prepare.outputs.template-version }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: cloudformation-error-handler
+        name: AWS CloudFormation Error handler
+        run: |
+          if [ "$ENVIRONMENT" == 'dev' ] then;
+            echo "Delete cloudformation template"
+            aws s3 rm s3://awesome-cmn-cfn/awesome-blog-infra/${{ env.TEMPLATE_VERSION }}/ --recursive
+          fi
+          exit 1

@@ -6,3 +6,122 @@ info:
 servers:
   - url: 'https'
 paths:
+  /articles:
+    get:
+      description: 記事一覧を取得します
+      parameters:
+        - name: tag
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TagName'
+        - name: nextPageToken
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/NextPageToken'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArticlesResponse'
+
+components:
+  schemas:
+    # ------------------------------------------------------------#
+    # 共通
+    # ------------------------------------------------------------#
+    NextPageToken:
+      type: string
+      description: 次ページ取得キー
+
+    # ------------------------------------------------------------#
+    # 記事
+    # ------------------------------------------------------------#
+    Article:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ArticleId'
+        name:
+          $ref: '#/components/schemas/ArticleName'
+        title:
+          $ref: '#/components/schemas/ArticleTitle'
+        tags:
+          $ref: '#/components/schemas/ArticleTags'
+
+    ArticleId:
+      type: string
+      description: 記事ID
+      example: 0d6d43fc-35e8-4b6f-86b3-d42412d8eab1
+
+    ArticleName:
+      type: string
+      description: URLに表示される記事名
+      example: how-to-post-first-article
+
+    ArticleTitle:
+      type: string
+      description: タイトル
+      example: 最初の記事を投稿する方法
+
+    ArticleTags:
+      type: array
+      description: 記事に付与しているタグ一覧
+      items:
+        $ref: '#/components/schemas/TagId'
+
+    # ------------------------------------------------------------#
+    # タグ
+    # ------------------------------------------------------------#
+    Tag:
+      type: object
+      description: タグ
+      properties:
+        id:
+          $ref: '#/components/schemas/TagId'
+        name:
+          $ref: '#/components/schemas/TagName'
+        label:
+          $ref: '#/components/schemas/TagLabel'
+        color:
+          $ref: '#/components/schemas/TagColor'
+
+    TagId:
+      type: string
+      description: タグID
+      format: uuid\
+      example: 0d6d43fc-35e8-4b6f-86b3-d42412d8eab1
+
+    TagName:
+      type: string
+      description: URLに表示されるタグ名
+      example: aws
+
+    TagLabel:
+      type: string
+      description: ラベル
+      example: AWS
+
+    TagColor:
+      type: string
+      description: タグ色
+      example: '#fcfcfc'
+
+    # ------------------------------------------------------------#
+    # リクエスト／レスポンス定義
+    # ------------------------------------------------------------#
+    GetArticlesResponse:
+      type: object
+      description: 記事一覧レスポンス
+      required:
+        - articles
+      properties:
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
