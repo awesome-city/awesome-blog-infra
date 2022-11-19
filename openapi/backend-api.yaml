@@ -5,6 +5,19 @@ info:
   version: 1.0.0
 servers:
   - url: 'https'
+
+# ------------------------------------------------------------#
+# API Gateway Validator Settings
+# ------------------------------------------------------------#
+x-amazon-apigateway-request-validators:
+  basic:
+    validateRequestBody: true
+    validateRequestParameters: true
+x-amazon-apigateway-request-validator: basic
+
+# ------------------------------------------------------------#
+# Path 定義
+# ------------------------------------------------------------#
 paths:
   /articles:
     get:
@@ -27,6 +40,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetArticlesResponse'
+      x-amazon-apigateway-integration:
+        uri: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:awesome-blog-dev-public/invocations"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
 
 components:
   schemas:

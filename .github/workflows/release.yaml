@@ -107,7 +107,7 @@ jobs:
             Environment=${{ env.ENVIRONMENT }},
             S3BucketWebDomainName=${{ steps.cloudformation-s3.outputs.S3BucketWebDomainName }},
             OpenAPISpecS3BucketName=awesome-cmn-cfn,
-            OpenAPISpecS3Key=${{ steps.prepare.outputs.template-base-path }}/openapi/backend-api.yaml
+            OpenAPISpecS3Key=${{ steps.prepare.outputs.template-base-path }}/openapi/${{ env.ENVIRONMENT }}/backend-api.yaml
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
 
       - id: cloudformation-check

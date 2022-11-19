@@ -64,9 +64,15 @@ jobs:
 
       - id: upload-api-spec
         name: Upload OpenAPI Specification
+        working-directory: ./openapi
         run: |
+          for env in dev stg prd
+          do
+            for name in `find . -type f -name '*.yaml'`; do sed -e "s/awesome-blog-dev/awesome-blog-$env/g" $name > ./$env/$name; done
+          done
+
           aws s3 cp \
-            ./openapi/ \
+            . \
             s3://${{ steps.upload.outputs.s3-bucket }}/${{ steps.upload.outputs.s3-bucket-prefix }}/openapi/ \
             --recursive
 
