@@ -95,6 +95,6 @@ jobs:
           no-fail-on-empty-changeset: "1"
           parameter-overrides: >-
             ServiceName=awesome-blog,
-            Environment=${ENVIRONMENT},
+            Environment=${{ env.ENVIRONMENT }},
             S3BucketWebDomainName=${{ steps.cloudformation-s3.outputs.S3BucketWebDomainName }}
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
