@@ -47,7 +47,6 @@ jobs:
       ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
       AWS_REGION: ${{ matrix.aws-region }}
       TEMPLATE_VERSION: ${{ needs.prepare.outputs.template-version }}
-    continue-on-error: true
     steps:
       - id: prepare
         name: Prepare
@@ -105,33 +104,15 @@ jobs:
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
 
       - id: cloudformation-check
+        name: check stack
         run: |
-          # s3
           aws cloudformation describe-stack-resources \
-            --stack-name 'awesome-blog-${ENVIRONMENT}-s3' \
+            --stack-name 'awesome-blog-${{ env.ENVIRONMENT }}-s3' \
             --output table
 
-          # stateful
           aws cloudformation describe-stack-resources \
-            --stack-name 'awesome-blog-${ENVIRONMENT}-stateful' \
+            --stack-name 'awesome-blog-${{ env.ENVIRONMENT }}-stateful' \
             --output table
-
-  on-error:
-    needs:
-      - deploy
-    if: needs.deploy.outcome == 'failure'
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-    env:
-      ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
-      AWS_REGION: ${{ matrix.aws-region }}
-      TEMPLATE_VERSION: ${{ needs.prepare.outputs.template-version }}
-    steps:
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOYMENT_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
 
       - id: cloudformation-error-handler
         name: AWS CloudFormation Error handler
