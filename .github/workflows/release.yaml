@@ -59,8 +59,8 @@ jobs:
           repository=${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}
           echo "repository-name=${repository}" >> "$GITHUB_OUTPUT"
 
-          template-base-path="${repository}/${TEMPLATE_VERSION}"
-          echo "template-base-path=${template-base-path}" >> "$GITHUB_OUTPUT"
+          template_base_path="${repository}/${TEMPLATE_VERSION}"
+          echo "template-base-path=${template_base_path}" >> "$GITHUB_OUTPUT"
       - name: Echo
         run: |
           echo "ENVIRONMENT=${ENVIRONMENT}"
