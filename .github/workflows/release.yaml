@@ -47,6 +47,7 @@ jobs:
       ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
       AWS_REGION: ${{ matrix.aws-region }}
       TEMPLATE_VERSION: ${{ needs.prepare.outputs.template-version }}
+    continue-on-error: true
     steps:
       - id: prepare
         name: Prepare
@@ -102,6 +103,18 @@ jobs:
             OpenAPISpecS3BucketName=awesome-cmn-cfn,
             OpenAPISpecS3Key=${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/${{ env.TEMPLATE_VERSION }}/openapi/backend-api.yaml
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
+
+      - id: cloudformation-check
+        run: |
+          # s3
+          aws cloudformation describe-stack-resources \
+            --stack-name 'awesome-blog-${ENVIRONMENT}-s3' \
+            --output table
+
+          # stateful
+          aws cloudformation describe-stack-resources \
+            --stack-name 'awesome-blog-${ENVIRONMENT}-stateful' \
+            --output table
 
   on-error:
     needs:
