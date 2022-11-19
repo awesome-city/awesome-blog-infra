@@ -125,7 +125,7 @@ jobs:
         name: AWS CloudFormation Error handler
         if: failure()
         run: |
-          if [ "$ENVIRONMENT" == 'dev' ] then;
+          if [ "$ENVIRONMENT" == 'dev' ]; then
             echo "Delete cloudformation template"
             aws s3 rm s3://awesome-cmn-cfn/${{ steps.prepare.outputs.template-base-path }}/ --recursive
           fi
