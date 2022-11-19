@@ -44,6 +44,14 @@ Resources:
         ServiceName: !Ref ServiceName
         Environment: !Ref Environment
         S3BucketWebDomainName: !Ref S3BucketWebDomainName
+        FrontPageApiId:
+          Fn::GetAtt:
+            - APIGateway
+            - 'Outputs.FrontPageApiId'
+        BackendApiId:
+          Fn::GetAtt:
+            - APIGateway
+            - 'Outputs.BackendApiId'
 
   # ------------------------------------------------------------#
   # DynamoDB
