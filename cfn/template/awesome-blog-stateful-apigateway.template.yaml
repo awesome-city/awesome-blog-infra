@@ -44,7 +44,7 @@ Resources:
   FrontPageApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
-      Name: HttpApiSample
+      Name: !Join [ '-', [ !Ref ServiceName, !Ref Environment, 'front' ] ]
       ProtocolType: HTTP
 
   FrontPageApiDefaultStage:
@@ -68,3 +68,11 @@ Resources:
             - 'function'
             - !Sub 'awesome-blog-${Environment}-front-page'
       PayloadFormatVersion: '2.0'
+
+Outputs:
+  BackendApiId:
+    Value: !Ref BackendApi
+  FrontPageApiId:
+    Value: !Ref FrontPageApi
+  FrontEndApiEndpoint:
+    Value: !GetAtt FrontPageApi.ApiEndpoint

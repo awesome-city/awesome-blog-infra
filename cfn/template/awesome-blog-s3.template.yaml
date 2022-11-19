@@ -18,25 +18,25 @@ Resources:
   # ------------------------------------------------------------#
   # S3 Bucket Policy
   # ------------------------------------------------------------#
-#  S3BucketPolicy:
-#    Type: AWS::S3::BucketPolicy
-#    Properties:
-#      Bucket: !Ref S3BucketWeb
-#      PolicyDocument:
-#        Version: "2008-10-17"
-#        Statement:
-#          - Sid: "AllowCloudFrontServicePrincipal"
-#            Effect: "Allow"
-#            Principal:
-#              Service:
-#                - "cloudfront.amazonaws.com"
-#            Action:
-#              - "s3:GetObject"
-#            Resource:
-#              - !Sub ${S3BucketWeb.Arn}/*
-#            Condition:
-#              StringEquals:
-#                AWS:SourceArn: !Join [ '', [ !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/', !ImportValue AwesomeBlogCloudFrontId ] ]
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3BucketWeb
+      PolicyDocument:
+        Version: "2008-10-17"
+        Statement:
+          - Sid: "AllowCloudFrontServicePrincipal"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "cloudfront.amazonaws.com"
+            Action:
+              - "s3:GetObject"
+            Resource:
+              - !Sub ${S3BucketWeb.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Join [ '', [ !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/', !ImportValue AwesomeBlogCloudFrontId ] ]
 
   # ------------------------------------------------------------#
   # S3

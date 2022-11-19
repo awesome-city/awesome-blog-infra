@@ -13,6 +13,10 @@ Parameters:
       - prd
   S3BucketWebDomainName:
     Type: String
+  FrontPageApiId:
+    Type: String
+  BackendApiId:
+    Type: String
 
 Resources:
   # ------------------------------------------------------------#
@@ -35,24 +39,55 @@ Resources:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
+        Enabled: true
+        Comment: !Join [ ' ', [ !Ref ServiceName, !Ref Environment ] ]
+        Origins:
+          - Id: S3
+            DomainName: !Ref S3BucketWebDomainName
+            OriginAccessControlId: !GetAtt OAC.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+          - Id: ApiGatewayFront
+            DomainName: !Sub '${FrontPageApiId}.execute-api.${AWS::Region}.amazonaws.com'
+          - Id: ApiGatewayBackend
+            DomainName: !Sub '${BackendApiId}.execute-api.${AWS::Region}.amazonaws.com'
         DefaultCacheBehavior:
+          TargetOriginId: ApiGatewayFront
           AllowedMethods:
             - GET
             - HEAD
           CachedMethods:
             - GET
             - HEAD
-          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
-          TargetOriginId: S3
-          ViewerProtocolPolicy: allow-all
-        Enabled: true
-        Comment: !Join [ ' ', [ !Ref ServiceName, !Ref Environment ] ]
-        Origins:
-          - DomainName: !Ref S3BucketWebDomainName
-            Id: S3
-            OriginAccessControlId: !GetAtt OAC.Id
-            S3OriginConfig:
-              OriginAccessIdentity: ''
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          ViewerProtocolPolicy: redirect-to-https
+        CacheBehaviors:
+          - PathPattern: /sr/*
+            TargetOriginId: S3
+            Compress: true
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ViewerProtocolPolicy: redirect-to-https
+          - PathPattern: /api/*
+            TargetOriginId: ApiGatewayBackend
+            Compress: false
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTION
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+            CachedMethods:
+              - OPTION
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            ViewerProtocolPolicy: redirect-to-https
         PriceClass: PriceClass_200
 
 Outputs:
