@@ -123,7 +123,7 @@ jobs:
 
       - id: cloudformation-error-handler
         name: AWS CloudFormation Error handler
-        if: failure()
+        if: steps.cloudformation-s3.outcome == 'failure' || steps.cloudformation-stateful.outcome == 'failure'
         run: |
           if [ "$ENVIRONMENT" == 'dev' ]; then
             echo "Delete cloudformation template"
