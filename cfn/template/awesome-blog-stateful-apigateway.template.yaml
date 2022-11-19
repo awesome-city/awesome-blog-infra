@@ -36,12 +36,6 @@ Resources:
     Type: AWS::ApiGateway::Deployment
     Properties:
       RestApiId: !Ref BackendApi
-
-  BackendApiStage:
-    Type: AWS::ApiGateway::Stage
-    Properties:
-      RestApiId: !Ref BackendApi
-      DeploymentId: !Ref BackendApiDeployment
       StageName: v1
 
   # ------------------------------------------------------------#
