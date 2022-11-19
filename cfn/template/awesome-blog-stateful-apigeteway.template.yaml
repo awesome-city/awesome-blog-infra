@@ -21,7 +21,23 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Join [ '-', [ !Ref ServiceName, !Ref Environment, 'api' ] ]
-      EndpointConfiguration: REGIONAL
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
       BodyS3Location:
         Bucket: !Ref OpenAPISpecS3BucketName
         Key: !Ref OpenAPISpecS3Key
+      DisableExecuteApiEndpoint: true
+
+  APIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref API
+
+  APIStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref API
+      DeploymentId: !Ref APIDeployment
+      StageName: v1
+

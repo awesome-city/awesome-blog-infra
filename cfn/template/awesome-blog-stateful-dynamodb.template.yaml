@@ -22,8 +22,6 @@ Resources:
           AttributeType: S
         - AttributeName: rangeKey
           AttributeType: S
-        - AttributeName: ttl
-          AttributeType: N
       KeySchema:
         - AttributeName: hashKey
           KeyType: HASH
@@ -43,8 +41,6 @@ Resources:
           AttributeType: S
         - AttributeName: rangeKey
           AttributeType: S
-        - AttributeName: ttl
-          AttributeType: N
       KeySchema:
         - AttributeName: hashKey
           KeyType: HASH
