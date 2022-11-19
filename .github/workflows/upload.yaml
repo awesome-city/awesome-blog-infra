@@ -48,7 +48,7 @@ jobs:
         run: |
           OUTPUT_TEMPLATE_FILE="./cfn/out/${{ matrix.template-name }}"
           S3_BUCKET="awesome-cmn-cfn"
-          S3_BUCKET_PREFIX="awesome-blog-infra/${TEMPLATE_VERSION}/"
+          S3_BUCKET_PREFIX="awesome-blog-infra/${TEMPLATE_VERSION}"
 
           aws cloudformation package \
             --template-file ./cfn/template/${{ matrix.template-name }} \
@@ -63,13 +63,16 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Validate
-        env:
-          S3_BUCKET: ${{ steps.upload.outputs.s3-bucket }}
-          S3_BUCKET_PREFIX: ${{ steps.upload.outputs.s3-bucket-prefix }}
-          OUTPUT_TEMPLATE_FILE: ${{ steps.upload.outputs.output-template-file }}
         run: |
           aws cloudformation validate-template \
             --template-body file://./${{ steps.upload.outputs.output-template-file }}
+
+      - name: Upload Template
+        run: |
+          aws s3 cp \
+            ${{ steps.upload.outputs.output-template-file }} \
+            s3://${{ steps.upload.outputs.s3-bucket }}/${{ steps.upload.outputs.s3-bucket-prefix }}/
+
   tag:
     needs:
       - upload
