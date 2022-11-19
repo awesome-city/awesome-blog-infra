@@ -23,7 +23,7 @@ jobs:
         run: echo "::add-matcher::.github/cfn-lint-matcher.json"
 
       - name: Lint by cfn-lint
-        run: cfn-lint ./cfn/template/*.yaml -f parseable
+        run: cfn-lint ./cfn/template/*.yaml -f parseable -i W3002
 
   lint-action:
     runs-on: ubuntu-latest

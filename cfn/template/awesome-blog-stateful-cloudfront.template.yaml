@@ -46,6 +46,7 @@ Resources:
           TargetOriginId: S3
           ViewerProtocolPolicy: allow-all
         Enabled: true
+        Comment: !Join [ ' ', [ !Ref ServiceName, !Ref Environment ] ]
         Origins:
           - DomainName: !Ref S3BucketWebDomainName
             Id: S3
