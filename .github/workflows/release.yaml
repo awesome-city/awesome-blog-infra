@@ -78,10 +78,23 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
         with:
           name: 'awesome-blog-${{ steps.prepare.outputs.short-region-name }}-${ENVIRONMENT}-s3'
-          template: ./awesome-blog-s3.template.yaml\
+          template: awesome-blog-s3.template.yaml
           no-fail-on-empty-changeset: "1"
           parameter-overrides: >-
             ServiceName=awesome-blog,
             Environment=${ENVIRONMENT},
             ShortRegionName=${{ steps.prepare.outputs.short-region-name }}
+          tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
+
+      - id: cloudformation-stateful
+        name: AWS CloudFormation "Create stateful stack"
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: 'awesome-blog-${{ steps.prepare.outputs.short-region-name }}-${ENVIRONMENT}-s3'
+          template: awesome-blog-s3.template.yaml
+          no-fail-on-empty-changeset: "1"
+          parameter-overrides: >-
+            ServiceName=awesome-blog,
+            Environment=${ENVIRONMENT},
+            S3BucketWebDomainName=${{ steps.cloudformation-s3.outputs.S3BucketWebDomainName }}
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
