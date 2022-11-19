@@ -96,5 +96,7 @@ jobs:
           parameter-overrides: >-
             ServiceName=awesome-blog,
             Environment=${{ env.ENVIRONMENT }},
-            S3BucketWebDomainName=${{ steps.cloudformation-s3.outputs.S3BucketWebDomainName }}
+            S3BucketWebDomainName=${{ steps.cloudformation-s3.outputs.S3BucketWebDomainName }},
+            OpenAPISpecS3BucketName=awesome-cmn-cfn,
+            OpenAPISpecS3Key=awesome-blog-infra/${{ env.TEMPLATE_VERSION }}/openapi/backend-api.yaml
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'

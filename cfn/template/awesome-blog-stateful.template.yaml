@@ -13,8 +13,25 @@ Parameters:
       - prd
   S3BucketWebDomainName:
     Type: String
+  OpenAPISpecS3BucketName:
+    Type: String
+  OpenAPISpecS3Key:
+    Type: String
 
 Resources:
+
+  # ------------------------------------------------------------#
+  # API Gateway
+  # ------------------------------------------------------------#
+  APIGateway:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: awesome-blog-stateful-apigateway.template.yaml
+      Parameters:
+        ServiceName: !Ref ServiceName
+        Environment: !Ref Environment
+        OpenAPISpecS3BucketName: !Ref OpenAPISpecS3BucketName
+        OpenAPISpecS3Key: !Ref OpenAPISpecS3Key
 
   # ------------------------------------------------------------#
   # CloudFront
@@ -27,3 +44,16 @@ Resources:
         ServiceName: !Ref ServiceName
         Environment: !Ref Environment
         S3BucketWebDomainName: !Ref S3BucketWebDomainName
+
+  # ------------------------------------------------------------#
+  # DynamoDB
+  # ------------------------------------------------------------#
+  DynamoDB:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: awesome-blog-stateful-dynamodb.template.yaml
+      Parameters:
+        ServiceName: !Ref ServiceName
+        Environment: !Ref Environment
+
+

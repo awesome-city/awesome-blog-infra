@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: APIGateway for awesome-blog
+
+Parameters:
+  ServiceName:
+    Type: String
+    Default: 'awesome-blog'
+  Environment:
+    Type: String
+    AllowedValues:
+      - dev
+      - stg
+      - prd
+  OpenAPISpecS3BucketName:
+    Type: String
+  OpenAPISpecS3Key:
+    Type: String
+
+Resources:
+  API:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Join [ '-', [ !Ref ServiceName, !Ref Environment, 'api' ] ]
+      EndpointConfiguration: REGIONAL
+      BodyS3Location:
+        Bucket: !Ref OpenAPISpecS3BucketName
+        Key: !Ref OpenAPISpecS3Key

@@ -44,7 +44,7 @@ jobs:
           aws-region: ap-northeast-1
 
       - id: upload
-        name: Upload
+        name: Upload Cloudformation Tamplate
         run: |
           OUTPUT_TEMPLATE_FILE="./cfn/out/${{ matrix.template-name }}"
           S3_BUCKET="awesome-cmn-cfn"
@@ -62,12 +62,20 @@ jobs:
             echo "s3-bucket-prefix=${S3_BUCKET_PREFIX}"
           } >> "$GITHUB_OUTPUT"
 
+      - id: upload-api-spec
+        name: Upload OpenAPI Specification
+        run: |
+          aws s3 cp \
+            ./openapi/ \
+            s3://${{ steps.upload.outputs.s3-bucket }}/${{ steps.upload.outputs.s3-bucket-prefix }}/openapi/ \
+            --recursive
+
       - name: Validate
         run: |
           aws cloudformation validate-template \
             --template-body file://./${{ steps.upload.outputs.output-template-file }}
 
-      - name: Upload Template
+      - name: Upload Packaged Template
         run: |
           aws s3 cp \
             ${{ steps.upload.outputs.output-template-file }} \

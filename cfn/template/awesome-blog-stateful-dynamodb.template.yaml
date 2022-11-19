@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: DynamoDB for awesome-blog
+
+Parameters:
+  ServiceName:
+    Type: String
+    Default: 'awesome-blog'
+  Environment:
+    Type: String
+    AllowedValues:
+      - dev
+      - stg
+      - prd
+
+Resources:
+  ObjectTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join [ '-', [ !Ref ServiceName , !Ref Environment, 'object-table' ] ]
+      AttributeDefinitions:
+        - AttributeName: hashKey
+          AttributeType: S
+        - AttributeName: rangeKey
+          AttributeType: S
+        - AttributeName: ttl
+          AttributeType: N
+      KeySchema:
+        - AttributeName: hashKey
+          KeyType: HASH
+        - AttributeName: rangeKey
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      BillingMode: PAY_PER_REQUEST
+
+  RelationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join [ '-', [ !Ref ServiceName , !Ref Environment, 'relation-table' ] ]
+      AttributeDefinitions:
+        - AttributeName: hashKey
+          AttributeType: S
+        - AttributeName: rangeKey
+          AttributeType: S
+        - AttributeName: ttl
+          AttributeType: N
+      KeySchema:
+        - AttributeName: hashKey
+          KeyType: HASH
+        - AttributeName: rangeKey
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  ObjectTableName:
+    Value: !Ref ObjectTable
+  RelationTableName:
+    Value: !Ref RelationTable
