@@ -100,13 +100,13 @@ jobs:
             Environment=${{ env.ENVIRONMENT }},
             S3BucketWebDomainName=${{ steps.cloudformation-s3.outputs.S3BucketWebDomainName }},
             OpenAPISpecS3BucketName=awesome-cmn-cfn,
-            OpenAPISpecS3Key=awesome-blog-infra/${{ env.TEMPLATE_VERSION }}/openapi/backend-api.yaml
+            OpenAPISpecS3Key=${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/${{ env.TEMPLATE_VERSION }}/openapi/backend-api.yaml
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
 
   on-error:
     needs:
       - deploy
-    if: needs.deploy.outcome === 'failure'
+    if: needs.deploy.outcome == 'failure'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -125,6 +125,6 @@ jobs:
         run: |
           if [ "$ENVIRONMENT" == 'dev' ] then;
             echo "Delete cloudformation template"
-            aws s3 rm s3://awesome-cmn-cfn/awesome-blog-infra/${{ env.TEMPLATE_VERSION }}/ --recursive
+            aws s3 rm s3://awesome-cmn-cfn/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/${{ env.TEMPLATE_VERSION }}/ --recursive
           fi
           exit 1
