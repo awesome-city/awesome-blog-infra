@@ -82,7 +82,7 @@ jobs:
           no-fail-on-empty-changeset: "1"
           parameter-overrides: >-
             ServiceName=awesome-blog,
-            Environment=${ENVIRONMENT},
+            Environment=${{ env.ENVIRONMENT }},
             ShortRegionName=${{ steps.prepare.outputs.short-region-name }}
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
 
