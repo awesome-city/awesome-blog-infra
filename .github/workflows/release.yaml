@@ -21,11 +21,11 @@ jobs:
       - id: Environment
         run: |
           if [ ${{ github.event_name }} == 'push' ]; then
-            echo "value=dev" >> "GITHUB_OUTPUT"
+            echo "value=dev" >> "$GITHUB_OUTPUT"
           elif [ ${{ github.event_name }} == 'release' ] && [ ${{ github.event.action }} == 'prereleased' ]; then
-            echo "value=stg" >> "GITHUB_OUTPUT"
+            echo "value=stg" >> "$GITHUB_OUTPUT"
           elif [ ${{ github.event_name }} == 'release' ] && [ ${{ github.event.action }} == 'released' ]; then
-            echo "value=prd" >> "GITHUB_OUTPUT"
+            echo "value=prd" >> "$GITHUB_OUTPUT"
           fi
         shell: bash
 

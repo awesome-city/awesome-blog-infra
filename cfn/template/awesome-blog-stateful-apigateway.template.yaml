@@ -17,7 +17,10 @@ Parameters:
     Type: String
 
 Resources:
-  API:
+  # ------------------------------------------------------------#
+  # Backend
+  # ------------------------------------------------------------#
+  BackendApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Join [ '-', [ !Ref ServiceName, !Ref Environment, 'api' ] ]
@@ -29,15 +32,45 @@ Resources:
         Key: !Ref OpenAPISpecS3Key
       DisableExecuteApiEndpoint: true
 
-  APIDeployment:
+  BackendApiDeployment:
     Type: AWS::ApiGateway::Deployment
     Properties:
-      RestApiId: !Ref API
+      RestApiId: !Ref BackendApi
 
-  APIStage:
+  BackendApiStage:
     Type: AWS::ApiGateway::Stage
     Properties:
-      RestApiId: !Ref API
-      DeploymentId: !Ref APIDeployment
+      RestApiId: !Ref BackendApi
+      DeploymentId: !Ref BackendApiDeployment
       StageName: v1
 
+  # ------------------------------------------------------------#
+  # Frontend
+  # ------------------------------------------------------------#
+  FrontPageApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: HttpApiSample
+      ProtocolType: HTTP
+
+  FrontPageApiDefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref FrontPageApi
+      StageName: "$default"
+      AutoDeploy: true
+
+  FrontPageApiHelloIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref FrontPageApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Join:
+          - ':'
+          - - 'arn:aws:lambda'
+            - !Ref AWS::Region
+            - !Ref AWS::AccountId
+            - 'function'
+            - !Sub 'awesome-blog-${Environment}-front-page'
+      PayloadFormatVersion: '2.0'
