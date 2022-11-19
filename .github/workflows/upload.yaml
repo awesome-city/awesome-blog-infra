@@ -89,6 +89,6 @@ jobs:
           echo "TEMPLATE_VERSION=${TEMPLATE_VERSION}"
           git tag "${TEMPLATE_VERSION}"
           git push origin "${TEMPLATE_VERSION}"
-          echo "build-version=${TEMPLATE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "template-version=${TEMPLATE_VERSION}" >> "$GITHUB_OUTPUT"
 
 

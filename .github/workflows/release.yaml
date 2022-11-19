@@ -12,7 +12,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      build-version: ${{ steps.TagName.outputs.value }}
+      template-version: ${{ steps.TagName.outputs.value }}
       environment: ${{ steps.Environment.outputs.value }}
     steps:
       - id: TagName
@@ -70,7 +70,7 @@ jobs:
 
       - name: Download Template
         run: |
-          aws s3 cp s3://awesome-cmn-cfn/awesome-blog-infra/${TEMPLATE_VERSION}/ . --recursive
+          aws s3 cp s3://awesome-cmn-cfn/awesome-blog-infra/"${TEMPLATE_VERSION}"/ . --recursive
           ls -lha .
 
       - id: cloudformation-s3

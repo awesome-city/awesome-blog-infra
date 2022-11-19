@@ -64,8 +64,8 @@ Resources:
       LifecycleConfiguration:
         Rules:
           - Id: LifeCycleRule
-        Status: Enabled
-        ExpirationInDays: 30
+            Status: Enabled
+            ExpirationInDays: 30
 
   S3BucketLifecycle1Week:
     Type: AWS::S3::Bucket
@@ -80,8 +80,8 @@ Resources:
       LifecycleConfiguration:
         Rules:
           - Id: LifeCycleRule
-        Status: Enabled
-        ExpirationInDays: 7
+            Status: Enabled
+            ExpirationInDays: 7
 
   S3BucketInternal:
     Type: AWS::S3::Bucket
