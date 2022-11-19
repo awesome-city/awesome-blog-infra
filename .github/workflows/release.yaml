@@ -50,18 +50,25 @@ jobs:
     steps:
       - id: prepare
         name: Prepare
+        shell: bash
         run: |
           list=(${AWS_REGION//-/ })
           short="${list[0]:0:1}""${list[1]:0:1}""${list[2]:0:1}"
           echo "short-region-name=${short}" >> "$GITHUB_OUTPUT"
-        shell: bash
 
+          repository=${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}
+          echo "repository-name=${repository}" >> "$GITHUB_OUTPUT"
+
+          template-base-path="${repository}/${TEMPLATE_VERSION}"
+          echo "template-base-path=${template-base-path}" >> "$GITHUB_OUTPUT"
       - name: Echo
         run: |
           echo "ENVIRONMENT=${ENVIRONMENT}"
           echo "AWS_REGION=${AWS_REGION}"
           echo "TEMPLATE_VERSION=${TEMPLATE_VERSION}"
           echo "SHORT_REGION_NAME=${{ steps.prepare.outputs.short-region-name }}"
+          echo "REPOSITORY_NAME=${{ steps.prepare.outputs.repository-name }}"
+          echo "TEMPLATE_BASE_PATH=${{ steps.prepare.outputs.template-base-path }}"
 
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -70,7 +77,7 @@ jobs:
 
       - name: Download Template
         run: |
-          aws s3 cp s3://awesome-cmn-cfn/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/"${TEMPLATE_VERSION}"/ . --recursive
+          aws s3 cp s3://awesome-cmn-cfn/${{ steps.prepare.outputs.template-base-path }}/ . --recursive
           ls -lha .
 
       - id: cloudformation-s3
@@ -100,7 +107,7 @@ jobs:
             Environment=${{ env.ENVIRONMENT }},
             S3BucketWebDomainName=${{ steps.cloudformation-s3.outputs.S3BucketWebDomainName }},
             OpenAPISpecS3BucketName=awesome-cmn-cfn,
-            OpenAPISpecS3Key=${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/${{ env.TEMPLATE_VERSION }}/openapi/backend-api.yaml
+            OpenAPISpecS3Key=${{ steps.prepare.outputs.template-base-path }}/openapi/backend-api.yaml
           tags: '[ { "Key": "Owner", "Value": "awesome" } ]'
 
       - id: cloudformation-check
@@ -116,9 +123,10 @@ jobs:
 
       - id: cloudformation-error-handler
         name: AWS CloudFormation Error handler
+        if: failure()
         run: |
           if [ "$ENVIRONMENT" == 'dev' ] then;
             echo "Delete cloudformation template"
-            aws s3 rm s3://awesome-cmn-cfn/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}/${{ env.TEMPLATE_VERSION }}/ --recursive
+            aws s3 rm s3://awesome-cmn-cfn/${{ steps.prepare.outputs.template-base-path }}/ --recursive
           fi
           exit 1

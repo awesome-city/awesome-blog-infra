@@ -44,7 +44,7 @@ jobs:
           aws-region: ap-northeast-1
 
       - id: upload
-        name: Upload Cloudformation Tamplate
+        name: Upload Cloudformation Template
         run: |
           OUTPUT_TEMPLATE_FILE="./cfn/out/${{ matrix.template-name }}"
           S3_BUCKET="awesome-cmn-cfn"
