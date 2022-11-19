@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       template-version: ${{ steps.TemplateVersion.outputs.template-version }}
-      s3-bucket: ${{ steps.upload.outputs.s3-bucket }}
-      s3-bucket-prefix: ${{ steps.upload.outputs.s3-bucket-prefix }}
+      s3-bucket: ${{ steps.ArtifactBucket.outputs.s3-bucket }}
+      s3-bucket-prefix: ${{ steps.ArtifactBucket.outputs.s3-bucket-prefix }}
     steps:
       - id: TemplateVersion
         name: TemplateVersion
