@@ -64,10 +64,12 @@ jobs:
 
       - id: upload-api-spec
         name: Upload OpenAPI Specification
+        if: ${{ matrix.template-name }} == 'awesome-blog-stateful.template.yaml'
         working-directory: ./openapi
         run: |
           for env in dev stg prd
           do
+            mkdir $env
             for name in `find . -type f -name '*.yaml'`; do sed -e "s/awesome-blog-dev/awesome-blog-$env/g" $name > ./$env/$name; done
           done
 
