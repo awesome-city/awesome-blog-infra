@@ -40,6 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: write
     strategy:
       matrix:
         aws-region: [ ap-northeast-1 ]
@@ -48,6 +49,9 @@ jobs:
       AWS_REGION: ${{ matrix.aws-region }}
       TEMPLATE_VERSION: ${{ needs.prepare.outputs.template-version }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - id: prepare
         name: Prepare
         shell: bash
@@ -128,5 +132,9 @@ jobs:
           if [ "$ENVIRONMENT" == 'dev' ]; then
             echo "Delete cloudformation template"
             aws s3 rm s3://awesome-cmn-cfn/${{ steps.prepare.outputs.template-base-path }}/ --recursive
+
+            echo "Delete tag"
+            git tag -d "${TEMPLATE_VERSION}"
+            git push --delete origin "${TEMPLATE_VERSION}"
           fi
           exit 1
