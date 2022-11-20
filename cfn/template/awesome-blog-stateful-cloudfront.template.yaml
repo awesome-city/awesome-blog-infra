@@ -80,7 +80,7 @@ Resources:
             AllowedMethods:
               - GET
               - HEAD
-              - OPTION
+              - OPTIONS
               - POST
               - PUT
               - DELETE
